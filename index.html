@@ -5,11 +5,11 @@
     <title>ポモドーロタイマー</title>
     <style>
         body { 
-            transform: scale(2); 
-            transform-origin: top center; 
-            margin-top: 100px;
             font-family: sans-serif; 
             text-align: center; 
+            margin-top: 50px; 
+            transform: scale(1.5);
+            transform-origin: top center;
         }
         
         #statusDisplay { 
@@ -69,6 +69,7 @@
 </div>
 
 <script>
+
 let time = 25 * 60;
 let totalSeconds = 0;
 let timerld = null;
@@ -100,6 +101,9 @@ function updateDisplay() {
 function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
+    
+    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
+
     updateDisplay();
 }
 
@@ -113,8 +117,13 @@ startButton.addEventListener("click", function() {
     if (timerld === null) {
         timerld = setInterval(function() {
             time--;
-            if (isWorkMode) { totalSeconds++; }
+            
+            if (isWorkMode) {
+                totalSeconds++;
+            }
+            
             updateDisplay();
+
             if (time <= 0) {
                 clearInterval(timerld);
                 timerld = null;
@@ -122,6 +131,7 @@ startButton.addEventListener("click", function() {
                 startButton.click();
             }
         }, 1000);
+
         startButton.textContent = "停止";
     } else {
         clearInterval(timerld);
@@ -146,5 +156,6 @@ endButton.addEventListener("click", function() {
     alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
 });
 </script>
+
 </body>
 </html>
