@@ -70,10 +70,11 @@
 
 <script>
 
-let time = 5;
+let time = 25 * 60;
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
+let hasStarted = false;
 
 const startSound = new Audio("start_new.mp3");
 const breakSound = new Audio("break_new.mp3");
@@ -114,10 +115,14 @@ const resetButton = document.getElementById("resetButton");
 const endButton = document.getElementById("endButton");
 
 startButton.addEventListener("click", function() {
-
-    startSound.play();
     
     if (timerld === null) {
+        
+        if(!hasStarted) {
+            startSound.play();
+            hasStarted = true;
+        }
+        
         timerld = setInterval(function() {
             time--;
             
