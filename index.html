@@ -4,64 +4,22 @@
     <meta charset="UTF-8">
     <title>ポモドーロタイマー</title>
     <style>
-        body { 
-            font-family: sans-serif; 
-            text-align: center; 
-            margin-top: 50px; 
-            transform: scale(2);
-            transform-origin: top center;
-        }
-        
-        #statusDisplay { 
-            font-size: 30px;
-            color: #555; 
-            margin-bottom: -30px; 
-        }
-        
-        .timer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; transform: scale(2); transform-origin: top center; }
+        #statusDisplay { font-size: 30px; color: #555; margin-bottom: -30px; }
+        .timer-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
         #timer { font-size: 100px; margin: 10px 0; }
-
-        #totalTimeDisplay {
-            font-size: 18px;
-            color: #767676;
-            margin-top: -20px;
-        }
-
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        button { 
-            padding: 15px 30px; 
-            font-size: 20px; 
-            cursor: pointer; 
-            width: 200px;
-            background-color: #a7d398; 
-            color: black;
-            border: none;
-            border-radius: 4px;
-        }
+        #totalTimeDisplay { font-size: 18px; color: #767676; margin-top: -20px; }
+        .button-container { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
+        button { padding: 15px 30px; font-size: 20px; cursor: pointer; width: 200px; background-color: #a7d398; border: none; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <h2 id="statusDisplay">作業中</h2>
-
 <div class="timer-container">
-    <h1 id="timer">25:00</h1>
+    <h1 id="timer">00:05</h1>
     <div id="totalTimeDisplay">本日の作業時間：0分</div>
 </div>
-
 <div class="button-container">
     <button id="startButton">開始</button>
     <button id="resetButton">リセット</button>
@@ -69,64 +27,42 @@
 </div>
 
 <script>
-
-let time = 5;
+let time = 5; 
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
 
 const startSound = new Audio("start.mp3");
 const breakSound = new Audio("break.mp3");
-    
+const timerElement = document.getElementById("timer");
+const statusDisplay = document.getElementById("statusDisplay");
+const startButton = document.getElementById("startButton");
+
 function updateDisplay() {
-    let minutes = Math.floor(time / 60);
-    let seconds = time % 60;
-    timerElement.textContent =
-        String(minutes).padStart(2, "0") + ":" +
-        String(seconds).padStart(2, "0");
-
-    let hours = Math.floor(totalSeconds / 3600);
-    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60);
-    const displayElement = document.getElementById("totalTimeDisplay");
-
-    if (hours > 0) {
-        displayElement.textContent = "本日の作業時間：" + hours + "時間" + remainingMinutes + "分";
-    } else {
-        displayElement.textContent = "本日の作業時間：" + remainingMinutes + "分";
-    }
-
+    timerElement.textContent = String(Math.floor(time / 60)).padStart(2, "0") + ":" + String(time % 60).padStart(2, "0");
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    document.getElementById("totalTimeDisplay").textContent = h > 0 ? `本日の作業時間：${h}時間${m}分` : `本日の作業時間：${m}分`;
     statusDisplay.textContent = isWorkMode ? "作業中" : "休憩中";
 }
 
 function switchMode() {
     isWorkMode = !isWorkMode;
-    time = isWorkMode ? 25 * 60 : 5 * 60;
-    
+    time = isWorkMode ? 25 * 60 : 5;
     if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
-
     updateDisplay();
 }
 
-const timerElement = document.getElementById("timer");
-const statusDisplay = document.getElementById("statusDisplay");
-const startButton = document.getElementById("startButton");
-const resetButton = document.getElementById("resetButton");
-const endButton = document.getElementById("endButton");
-
 startButton.addEventListener("click", function() {
-
-    startSound.play();
-    
     if (timerld === null) {
+        // タイマー開始時のみ音を鳴らす
+        startSound.currentTime = 0;
+        startSound.play().catch(() => {});
+        
         timerld = setInterval(function() {
             time--;
-            
-            if (isWorkMode) {
-                totalSeconds++;
-            }
-            
+            if (isWorkMode) totalSeconds++;
             updateDisplay();
-
             if (time <= 0) {
                 clearInterval(timerld);
                 timerld = null;
@@ -134,31 +70,30 @@ startButton.addEventListener("click", function() {
                 startButton.click();
             }
         }, 1000);
-
         startButton.textContent = "停止";
     } else {
+        // 停止時：タイマーを止めて音も止める
         clearInterval(timerld);
         timerld = null;
+        startSound.pause();
+        startSound.currentTime = 0;
+        breakSound.pause();
+        breakSound.currentTime = 0;
         startButton.textContent = "開始";
     }
 });
 
-resetButton.addEventListener("click", function() {
+document.getElementById("resetButton").addEventListener("click", function() {
     clearInterval(timerld);
     timerld = null;
     isWorkMode = true;
-    time = 25 * 60;
+    time = 5;
     totalSeconds = 0;
+    startSound.pause();
+    breakSound.pause();
     updateDisplay();
     startButton.textContent = "開始";
 });
-
-endButton.addEventListener("click", function() {
-    let hours = Math.floor(totalSeconds / 3600);
-    let minutes = Math.floor((totalSeconds % 3600) / 60);
-    alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
-});
 </script>
-
 </body>
 </html>
