@@ -103,7 +103,15 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
+    if (isWorkMode) {
+        startSound.pause(); 
+        startSound.currentTime = 0; // 再生位置を強制的に0に戻す
+        startSound.play().catch(e => console.log("再生失敗：", e));
+    } else {
+        breakSound.pause();
+        breakSound.currentTime = 0; // 再生位置を強制的に0に戻す
+        breakSound.play().catch(e => console.log("再生失敗：", e));
+    }
 
     updateDisplay();
 }
