@@ -69,8 +69,7 @@
 </div>
 
 <script>
-
-let time = 5;
+let time = 25 * 60; // 初期値を25分に修正しました
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
@@ -78,7 +77,12 @@ let hasStarted = false;
 
 const startSound = new Audio("start.mp3");
 const breakSound = new Audio("break.mp3");
-    
+const timerElement = document.getElementById("timer");
+const statusDisplay = document.getElementById("statusDisplay");
+const startButton = document.getElementById("startButton");
+const resetButton = document.getElementById("resetButton");
+const endButton = document.getElementById("endButton");
+
 function updateDisplay() {
     let minutes = Math.floor(time / 60);
     let seconds = time % 60;
@@ -103,28 +107,26 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
+    // 再生前に位置をリセットし、エラーをキャッチする設定
+    if (isWorkMode) { 
+        startSound.currentTime = 0;
+        startSound.play().catch(e => console.log("再生失敗:", e)); 
+    } else { 
+        breakSound.currentTime = 0;
+        breakSound.play().catch(e => console.log("再生失敗:", e)); 
+    }
 
     updateDisplay();
 }
 
-const timerElement = document.getElementById("timer");
-const statusDisplay = document.getElementById("statusDisplay");
-const startButton = document.getElementById("startButton");
-const resetButton = document.getElementById("resetButton");
-const endButton = document.getElementById("endButton");
-
 startButton.addEventListener("click", function() {
-
-    startButton.addEventListener("click", function() {
-    // 【追加】ここで「許可」を取るための空再生を行う
-    startSound.play().then(() => startSound.pause());
-    breakSound.play().then(() => breakSound.pause());
+    // iPhoneの制限回避用の空再生処理
+    startSound.play().then(() => startSound.pause()).catch(() => {});
+    breakSound.play().then(() => breakSound.pause()).catch(() => {});
     
     if (timerld === null) {
-        
         if(!hasStarted) {
-            startSound.play();
+            startSound.play().catch(() => {});
             hasStarted = true;
         }
         
@@ -154,7 +156,6 @@ startButton.addEventListener("click", function() {
 });
 
 resetButton.addEventListener("click", function() {
-    
     clearInterval(timerld);
     timerld = null;
     isWorkMode = true;
