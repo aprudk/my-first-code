@@ -118,11 +118,10 @@ function switchMode() {
 
     updateDisplay();
 }
-
 startButton.addEventListener("click", function() {
-    // iPhoneの制限回避用の空再生処理
-    startSound.play().then(() => startSound.pause()).catch(() => {});
-    breakSound.play().then(() => breakSound.pause()).catch(() => {});
+    // 【修正箇所】鳴らすのではなく「読み込み（load）」にする
+    startSound.load();
+    breakSound.load();
     
     if (timerld === null) {
         if(!hasStarted) {
