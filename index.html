@@ -74,10 +74,9 @@ let time = 5;
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
-let hasStarted = false;
 
-const startSound = new Audio("break.mp3");
-const breakSound = new Audio("start.mp3");
+const startSound = new Audio("start_new.mp3");
+const breakSound = new Audio("break.mp3");
     
 function updateDisplay() {
     let minutes = Math.floor(time / 60);
@@ -103,13 +102,7 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode)  { 
-        startSound.load();
-        startSound.play().catch(e => console.log("再生失敗：", e));
-    } else { 
-        breakSound.load();
-        breakSound.play().catch(e => console.log("再生失敗：", e))
-    }
+    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
 
     updateDisplay();
 }
@@ -121,14 +114,10 @@ const resetButton = document.getElementById("resetButton");
 const endButton = document.getElementById("endButton");
 
 startButton.addEventListener("click", function() {
+
+    startSound.play();
     
     if (timerld === null) {
-        
-        if(!hasStarted) {
-            startSound.play();
-            hasStarted = true;
-        }
-        
         timerld = setInterval(function() {
             time--;
             
