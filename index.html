@@ -103,15 +103,13 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) {
-        startSound.pause(); 
-        startSound.currentTime = 0; // 再生位置を強制的に0に戻す
-        startSound.play().catch(e => console.log("再生失敗：", e));
-    } else {
-        breakSound.pause();
-        breakSound.currentTime = 0; // 再生位置を強制的に0に戻す
-        breakSound.play().catch(e => console.log("再生失敗：", e));
-    }
+    // 再生する前に、その都度新しく音源オブジェクトを作る方法
+    let soundToPlay = isWorkMode ? new Audio("start.mp3") : new Audio("break.mp3");
+    
+    soundToPlay.play().catch(e => {
+        console.error("再生失敗:", e);
+        // ここでエラーが出た場合、何が原因かを表示させるためのログです
+    });
 
     updateDisplay();
 }
