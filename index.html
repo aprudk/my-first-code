@@ -104,10 +104,10 @@ function switchMode() {
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
     if (isWorkMode) {
-        startSound.play();
-    } else {
-        breakSound.play().catch(err => alert(err));
-    }
+    startSound.play().catch(err => alert("start:" + err.name));
+} else {
+    breakSound.play().catch(err => alert("break:" + err.name));
+}
 
     updateDisplay();
 }
