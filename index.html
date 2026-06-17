@@ -116,6 +116,12 @@ const endButton = document.getElementById("endButton");
 startButton.addEventListener("click", function() {
     
     if (timerld === null) {
+        
+        if(!hasStarted) {
+            startSound.play();
+            hasStarted = true
+        }
+        
         timerld = setInterval(function() {
             time--;
             
