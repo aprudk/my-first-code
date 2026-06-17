@@ -69,6 +69,11 @@
     <button id="endButton">終了</button>
 </div>
 
+<div id="resultModal" style="display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: white; padding: 20px; border: 2px solid #ccc; z-index: 1000; box-shadow: 0 0 10px rgba(0,0,0,0.2);">
+    <p id="resultText"></p>
+    <button onclick="document.getElementById('resultModal').style.display='none'">閉じる</button>
+</div>
+
 <script>
 // --- JavaScriptの処理開始 ---
 
@@ -191,8 +196,12 @@ endButton.addEventListener("click", function() {
     let hours = Math.floor(totalSeconds / 3600); // 合計時間を計算
     let minutes = Math.floor((totalSeconds % 3600) / 60); // 合計分を計算
 
-    // ３、ポップアップ表示
-    alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
+    // ３、ポップアップ表示（モーダルに変更）
+    const modal = document.getElementById("resultModal");
+    const resultText = document.getElementById("resultText");
+    
+    resultText.textContent = "お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ";
+    modal.style.display = "block";
 });
 </script>
 
