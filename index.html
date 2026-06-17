@@ -58,7 +58,7 @@
 <h2 id="statusDisplay">作業中</h2>
 
 <div class="timer-container">
-    <h1 id="timer">00:05</h1>
+    <h1 id="timer">25:00</h1>
     <div id="totalTimeDisplay">本日の作業時間：0分</div>
 </div>
 
@@ -69,7 +69,9 @@
 </div>
 
 <script>
-let time = 5;
+
+// 初期値を25分(1500秒)に変更しました
+let time = 25 * 60;
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
@@ -105,9 +107,10 @@ function updateDisplay() {
 
 function switchMode() {
     isWorkMode = !isWorkMode;
-    time = isWorkMode ? 25 * 60 : 5;
+    // ここで25分と5分が自動で切り替わります
+    time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
+    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
 
     updateDisplay();
 }
@@ -152,7 +155,7 @@ resetButton.addEventListener("click", function() {
     clearInterval(timerld);
     timerld = null;
     isWorkMode = true;
-    time = 5;
+    time = 25 * 60; // リセット時も25分に戻ります
     totalSeconds = 0;
     startSound.pause();
     startSound.currentTime = 0;
