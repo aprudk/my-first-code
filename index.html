@@ -75,23 +75,9 @@ let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
 
-//const startSound = new Audio("start.mp3");
-//const breakSound = new Audio("break.mp3");
-
-    function switchMode() {
-    isWorkMode = !isWorkMode;
-    time = isWorkMode ? 25 * 60 : 5 * 60;
+const startSound = new Audio("start.mp3");
+const breakSound = new Audio("break.mp3");
     
-    // 鳴らすたびに「その場で」音源を作って再生させる
-    let sound = new Audio(isWorkMode ? "start.mp3" : "break.mp3");
-    sound.play().catch(function(error) {
-        console.error("再生失敗:", error);
-    });
-
-    updateDisplay();
-}
-    //ここまで追記
-
 function updateDisplay() {
     let minutes = Math.floor(time / 60);
     let seconds = time % 60;
