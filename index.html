@@ -77,7 +77,7 @@ let isWorkMode = true;
 let hasStarted = false;
 
 const startSound = new Audio("start.mp3");
-const breakSound = new Audio("break.mp3");
+const breakSound = new Audio("start.mp3");
     
 function updateDisplay() {
     let minutes = Math.floor(time / 60);
@@ -103,11 +103,7 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) {
-    startSound.play().catch(err => alert("start:" + err.name));
-} else {
-    breakSound.play().catch(err => alert("break:" + err.name));
-}
+    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
 
     updateDisplay();
 }
