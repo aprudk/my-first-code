@@ -90,109 +90,113 @@ const endButton = document.getElementById("endButton");
     
 // タイマーの数字や表示を最新にするための関数です
 function updateDisplay() {
-    let minutes = Math.floor(time / 60); // 秒数から「分」を計算します
-    let seconds = time % 60; // 秒数から「余りの秒」を計算します
-    // 「05:00」のように2桁で表示するように文字を整えます
-    timerElement.textContent = String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    let minutes = Math.floor(time / 60);
+    let seconds = time % 60;
 
-    let hours = Math.floor(totalSeconds / 3600); // 合計秒から「時間」を計算
-    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60); // 合計秒から「残り分」を計算
+    timerElement.textContent =
+        String(minutes).padStart(2, "0") + ":" +
+        String(seconds).padStart(2, "0");
+
+    let hours = Math.floor(totalSeconds / 3600);
+    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60);
     const displayElement = document.getElementById("totalTimeDisplay");
 
-    // 合計作業時間の表示文言を作ります
     if (hours > 0) {
         displayElement.textContent = "本日の作業時間：" + hours + "時間" + remainingMinutes + "分";
     } else {
         displayElement.textContent = "本日の作業時間：" + remainingMinutes + "分";
     }
 
-    // 今が作業中か休憩中かを表示します
     statusDisplay.textContent = isWorkMode ? "作業中" : "休憩中";
 }
 
 // 作業と休憩を入れ替える関数です
 function switchMode() {
-    isWorkMode = !isWorkMode; // スイッチを反転させます
-    time = isWorkMode ? 25 * 60 : 5 * 60; // モードに合わせて時間をセットします
-    
-    // 音を鳴らします。
-    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
+    isWorkMode = !isWorkMode;
+    time = isWorkMode ? 25 * 60 : 5 * 60;
 
-    updateDisplay(); // 画面を更新します
-}
-
-// タイマーを動かすための共通関数（playSoundで音を鳴らすか選べます）
-function startTimer(playSound = true) {
-    if (playSound) {
-        startSound.currentTime = 0; // 音を最初から再生できるようにリセット
-        startSound.play().catch(() => {}); // 再生開始
+    // ★ここが修正ポイント（モードに応じて必ず鳴らす）
+    if (isWorkMode) {
+        startSound.currentTime = 0;
+        startSound.play().catch(() => {});
+    } else {
+        breakSound.currentTime = 0;
+        breakSound.play().catch(() => {});
     }
-    
-    // 1秒ごとに動き出すタイマーです
-    timerld = setInterval(function() {
-        time--; // 1秒減らします
-        
-        if (isWorkMode) {
-            totalSeconds++; // 作業中なら合計時間を増やします
-        }
-        
-        updateDisplay(); // 画面を書き換えます
 
-        // 時間が0になったらタイマーを止めて切り替えます
-        if (time <= 0) {
-            clearInterval(timerld);
-            switchMode(); // モード切り替え（ここでも音が鳴ります）
-            startTimer(false); // 次のタイマーを再開（この時は音を鳴らさない）
-        }
-    }, 1000);
+    updateDisplay();
 }
 
 // 開始ボタンが押された時の処理です
 startButton.addEventListener("click", function() {
     if (timerld === null) {
-        // タイマーが止まっていたらスタートします
-        startTimer(true); // 手動開始時は音を鳴らす
-        startButton.textContent = "停止"; // ボタンの名前を「停止」にします
+
+        // ★手動開始だけ音を鳴らす
+        startSound.currentTime = 0;
+        startSound.play().catch(() => {});
+
+        timerld = setInterval(function() {
+            time--;
+
+            if (isWorkMode) {
+                totalSeconds++;
+            }
+
+            updateDisplay();
+
+            if (time <= 0) {
+                clearInterval(timerld);
+                timerld = null;
+
+                switchMode();
+
+                // ★自動再開（音はswitchModeで鳴るのでここでは鳴らさない）
+                startButton.click();
+            }
+        }, 1000);
+
+        startButton.textContent = "停止";
     } else {
-        // タイマーが動いている時に押したら止める処理です
-        clearInterval(timerld); // タイマーを解除
-        timerld = null; // 止まっている状態に設定
-        startSound.pause(); // 音を一時停止
-        startSound.currentTime = 0; // 音を最初に戻す
-        breakSound.pause(); 
+        clearInterval(timerld);
+        timerld = null;
+
+        startSound.pause();
+        startSound.currentTime = 0;
+
+        breakSound.pause();
         breakSound.currentTime = 0;
-        startButton.textContent = "開始"; // ボタンを「開始」に戻す
+
+        startButton.textContent = "開始";
     }
 });
 
 // リセットボタンが押された時の処理です
 resetButton.addEventListener("click", function() {
-    clearInterval(timerld); // タイマーを停止
+    clearInterval(timerld);
     timerld = null;
-    isWorkMode = true; // 作業モードに戻す
-    time = 25 * 60; // 時間を25分に戻す
-    totalSeconds = 0; // 合計時間をゼロに
-    startSound.pause(); // 音を停止
+    isWorkMode = true;
+    time = 25 * 60;
+    totalSeconds = 0;
+
+    startSound.pause();
     startSound.currentTime = 0;
     breakSound.pause();
     breakSound.currentTime = 0;
-    updateDisplay(); // 画面をリセット
+
+    updateDisplay();
     startButton.textContent = "開始";
 });
 
 // 終了ボタン（結果確認）が押された時の処理です
 endButton.addEventListener("click", function() {
-    // １、音を鳴らす
     finishSound.play().catch(() => {});
 
-    // ２、処理計算
-    let hours = Math.floor(totalSeconds / 3600); // 合計時間を計算
-    let minutes = Math.floor((totalSeconds % 3600) / 60); // 合計分を計算
+    let hours = Math.floor(totalSeconds / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
 
-    // ３、ポップアップ表示
     setTimeout(function() {
         alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
-    }, 100); 
+    }, 100);
 });
 </script>
 
