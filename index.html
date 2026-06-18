@@ -4,22 +4,65 @@
     <meta charset="UTF-8">
     <title>ポモドーロタイマー</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; transform: scale(2); transform-origin: top center; }
-        #statusDisplay { font-size: 30px; color: #555; margin-bottom: -30px; }
-        .timer-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        /* 画面全体の見た目や配置を決める設定です */
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            margin-top: 50px; 
+            transform: scale(2); /* 全体を2倍の大きさに拡大表示します */
+            transform-origin: top center; /* 拡大の基準を画面上部中央にします */
+        }
+        
+        #statusDisplay { 
+            font-size: 30px;
+            color: #555; 
+            margin-bottom: -30px; 
+        }
+        
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         #timer { font-size: 100px; margin: 10px 0; }
-        #totalTimeDisplay { font-size: 18px; color: #767676; margin-top: -20px; }
-        .button-container { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
-        button { padding: 15px 30px; font-size: 20px; cursor: pointer; width: 200px; background-color: #a7d398; color: black; border: none; border-radius: 4px; }
+
+        #totalTimeDisplay {
+            font-size: 18px;
+            color: #767676;
+            margin-top: -20px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button { 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            cursor: pointer; 
+            width: 200px;
+            background-color: #a7d398; 
+            color: black;
+            border: none;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
 
 <h2 id="statusDisplay">作業中</h2>
+
 <div class="timer-container">
     <h1 id="timer">25:00</h1>
     <div id="totalTimeDisplay">本日の作業時間：0分</div>
 </div>
+
 <div class="button-container">
     <button id="startButton">開始</button>
     <button id="resetButton">リセット</button>
@@ -27,103 +70,55 @@
 </div>
 
 <script>
-let time = 5;
-let totalSeconds = 0;
-let timerld = null;
-let isWorkMode = true;
-let isAudioUnlocked = false; // 権限取得フラグ
+// --- JavaScriptの処理開始 ---
 
-// 音声用オブジェクト
-const startSound = new Audio("start.mp3");
-const breakSound = new Audio("break.mp3");
-const finishSound = new Audio("finish.mp3");
+let time = 5; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
+let totalSeconds = 0; // 今日どれだけ作業したかの合計秒数です
+let timerld = null; // タイマーが動いているか記録する場所です（nullは止まっている状態）
+let isWorkMode = true; // 今が作業中(true)か休憩中(false)かの切り替えスイッチです
 
-// 権限取得用（別オブジェクトにすることで、本番用のcurrentTimeに影響を与えない）
-const unlockSound = new Audio("start.mp3");
+const startSound = new Audio("start.mp3"); // 作業開始の音ファイルを準備します
+const breakSound = new Audio("break.mp3"); // 休憩開始の音ファイルを準備します
+const finishSound = new Audio("finish.mp3"); // 作業終了の音ファイル
 
+// 画面の要素を操作するために名前をつけておきます
+// ドキュメント=Webページ
+// ゲット・エレメント・バイ・アイディー=指定した要素（ID)を拾い上げて操作できる状態にする
 const timerElement = document.getElementById("timer");
 const statusDisplay = document.getElementById("statusDisplay");
 const startButton = document.getElementById("startButton");
 const resetButton = document.getElementById("resetButton");
 const endButton = document.getElementById("endButton");
-
+    
+// タイマーの数字や表示を最新にするための関数です
+// function=料理レシピのようなもの、命令のパッケージ
+// undateDisplay=見えない計算を、見えるように画面に反映する
 function updateDisplay() {
-    let minutes = Math.floor(time / 60);
-    let seconds = time % 60;
+    let minutes = Math.floor(time / 60); // 秒数から「分」を計算します
+    let seconds = time % 60; // 秒数から「余りの秒」を計算します
+    // 「05:00」のように2桁で表示するように文字を整えます
     timerElement.textContent = String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
-    let hours = Math.floor(totalSeconds / 3600);
-    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60);
+    // textContent=String（後述）を書くための掲示板のようなもの
+    // String=文字列（人間が読む文字）
+
+    let hours = Math.floor(totalSeconds / 3600); // 合計秒から「時間」を計算
+    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60); // 合計秒から「残り分」を計算
     const displayElement = document.getElementById("totalTimeDisplay");
-    displayElement.textContent = hours > 0 ? "本日の作業時間：" + hours + "時間" + remainingMinutes + "分" : "本日の作業時間：" + remainingMinutes + "分";
+
+    // 合計作業時間の表示文言を作ります
+    if (hours > 0) {
+        displayElement.textContent = "本日の作業時間：" + hours + "時間" + remainingMinutes + "分";
+    } else {
+        displayElement.textContent = "本日の作業時間：" + remainingMinutes + "分";
+    }
+
+    // 今が作業中か休憩中かを表示します
     statusDisplay.textContent = isWorkMode ? "作業中" : "休憩中";
 }
 
+// 作業と休憩を入れ替える関数です
 function switchMode() {
-    isWorkMode = !isWorkMode;
-    time = isWorkMode ? 25 * 60 : 5 * 60;
-    // ここで再生される時は必ずcurrentTimeが0の状態から始まる
-    if (isWorkMode) { startSound.currentTime = 0; startSound.play().catch(() => {}); } 
-    else { breakSound.currentTime = 0; breakSound.play().catch(() => {}); }
-    updateDisplay();
-}
-
-startButton.addEventListener("click", function() {
-    if (timerld === null) {
-        // 【修正点】開始時に権限取得用のオブジェクトのみを無音で鳴らす
-        if (!isAudioUnlocked) {
-            unlockSound.volume = 0;
-            unlockSound.play().then(() => {
-                unlockSound.pause();
-                unlockSound.currentTime = 0;
-            }).catch(() => {});
-            isAudioUnlocked = true;
-        }
-
-        startSound.currentTime = 0;
-        startSound.play().catch(() => {});
-        
-        timerld = setInterval(function() {
-            time--;
-            if (isWorkMode) totalSeconds++;
-            updateDisplay();
-            if (time <= 0) {
-                clearInterval(timerld);
-                timerld = null;
-                switchMode();
-                if (time <= 0) startButton.click(); // タイマーの再開
-            }
-        }, 1000);
-        startButton.textContent = "停止";
-    } else {
-        clearInterval(timerld);
-        timerld = null;
-        startSound.pause();
-        startSound.currentTime = 0;
-        breakSound.pause();
-        breakSound.currentTime = 0;
-        startButton.textContent = "開始";
-    }
-});
-
-resetButton.addEventListener("click", function() {
-    clearInterval(timerld);
-    timerld = null;
-    isWorkMode = true;
-    time = 25 * 60;
-    totalSeconds = 0;
-    startSound.pause(); startSound.currentTime = 0;
-    breakSound.pause(); breakSound.currentTime = 0;
-    updateDisplay();
-    startButton.textContent = "開始";
-});
-
-endButton.addEventListener("click", function() {
-    finishSound.currentTime = 0;
-    finishSound.play().catch(() => {});
-    let hours = Math.floor(totalSeconds / 3600);
-    let minutes = Math.floor((totalSeconds % 3600) / 60);
-    setTimeout(() => { alert("お疲れ様でした！合計：" + hours + "時間" + minutes + "分 "); }, 100);
-});
-</script>
-</body>
-</html>
+    isWorkMode = !isWorkMode; // スイッチを反転させます
+    time = isWorkMode ? 25 * 60 : 5 * 60; // モードに合わせて時間をセットします
+    
+    // 音を鳴らします。失敗してもプログラム
