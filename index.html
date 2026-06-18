@@ -76,6 +76,7 @@ let time = 5; // タイマーの残り時間を秒数で持ちます（25分＝1
 let totalSeconds = 0; // 今日どれだけ作業したかの合計秒数です
 let timerld = null; // タイマーが動いているか記録する場所です（nullは止まっている状態）
 let isWorkMode = true; // 今が作業中(true)か休憩中(false)かの切り替えスイッチです
+let isAudioUnlocked = false; // 音声権限を取得済みかどうかのフラグ
 
 const startSound = new Audio("start.mp3"); // 作業開始の音ファイルを準備します
 const breakSound = new Audio("break.mp3"); // 休憩開始の音ファイルを準備します
@@ -131,9 +132,16 @@ function switchMode() {
 // 開始ボタンが押された時の処理です
 startButton.addEventListener("click", function() {
     if (timerld === null) {
-        // --- あなたが提案した「無音での権限確保」をここで実行します ---
-        breakSound.volume = 0; breakSound.play().then(() => { breakSound.pause(); breakSound.currentTime = 0; breakSound.volume = 1; }).catch(() => {});
-        finishSound.volume = 0; finishSound.play().then(() => { finishSound.pause(); finishSound.currentTime = 0; finishSound.volume = 1; }).catch(() => {});
+        // --- 【追加】iPhoneの音声自動制限を回避するための権限取得処理 ---
+        if (!isAudioUnlocked) {
+            startSound.volume = 0;
+            startSound.play().then(() => {
+                startSound.pause();
+                startSound.currentTime = 0;
+                startSound.volume = 1;
+                isAudioUnlocked = true;
+            }).catch(() => {});
+        }
 
         // タイマーが止まっていたらスタートします
         startSound.currentTime = 0; // 音を最初から再生できるようにリセット
