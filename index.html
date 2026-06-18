@@ -72,7 +72,7 @@
 <script>
 // --- JavaScriptの処理開始 ---
 
-let time = 5; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
+let time = 25 * 60; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
 let totalSeconds = 0; // 今日どれだけ作業したかの合計秒数です
 let timerld = null; // タイマーが動いているか記録する場所です（nullは止まっている状態）
 let isWorkMode = true; // 今が作業中(true)か休憩中(false)かの切り替えスイッチです
@@ -118,17 +118,18 @@ function updateDisplay() {
 
 // 作業と休憩を入れ替える関数です
 function switchMode() {
-    isWorkMode = !isWorkMode;
-    time = isWorkMode ? 25 * 60 : 5 * 60;
-
-    // ここで今、どちらが鳴ろうとしているかを確認（コンソールログ）
-    if (isWorkMode) {
-        console.log("作業モードへ切り替え：startSoundを再生");
-        startSound.play().catch(() => {});
-    } else {
-        console.log("休憩モードへ切り替え：breakSoundを再生");
-        breakSound.play().catch(() => {});
+    isWorkMode = !isWorkMode; 
+    time = isWorkMode ? 25 * 60 : 5 * 60; 
+    
+    // iPhoneに「次はこの音を鳴らすんだよ！」と教えます
+    if (isWorkMode) { 
+        startSound.currentTime = 0; // 一度頭出しして
+        startSound.play().catch(() => {}); // 再生する
+    } else { 
+        breakSound.currentTime = 0; // 一度頭出しして
+        breakSound.play().catch(() => {}); // 再生する
     }
+
     updateDisplay();
 }
 
