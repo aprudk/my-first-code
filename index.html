@@ -1,3 +1,5 @@
+PC版完成品
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -139,6 +141,7 @@ startButton.addEventListener("click", function() {
     if (timerld === null) {
         // タイマーが止まっていたらスタートします
         startSound.currentTime = 0; // 音を最初から再生できるようにリセット
+        startSound.play().catch(() => {}); // 再生開始
         
         // 1秒ごとに動き出すタイマーです
         timerld = setInterval(function() {
