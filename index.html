@@ -72,16 +72,14 @@
 <script>
 // --- JavaScriptの処理開始 ---
 
-let time = 5; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
+let time = 25 * 60; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
 let totalSeconds = 0; // 今日どれだけ作業したかの合計秒数です
 let timerld = null; // タイマーが動いているか記録する場所です（nullは止まっている状態）
 let isWorkMode = true; // 今が作業中(true)か休憩中(false)かの切り替えスイッチです
 
-// 音声再生のための関数（iPhone対策）
-function playAudio(fileName) {
-    const audio = new Audio(fileName);
-    audio.play().catch(() => {});
-}
+const startSound = new Audio("start.mp3"); // 作業開始の音ファイルを準備します
+const breakSound = new Audio("break.mp3"); // 休憩開始の音ファイルを準備します
+const finishSound = new Audio("finish.mp3"); // 作業終了の音ファイル
 
 // 画面の要素を操作するために名前をつけておきます
 // ドキュメント=Webページ
@@ -123,8 +121,9 @@ function switchMode() {
     isWorkMode = !isWorkMode; // スイッチを反転させます
     time = isWorkMode ? 25 * 60 : 5 * 60; // モードに合わせて時間をセットします
     
-    // 音を鳴らします。その都度生成することでiPhoneのすり替わりを防ぎます
-    playAudio(isWorkMode ? "start.mp3" : "break.mp3");
+    // 音を鳴らします。失敗してもプログラムが止まらないよう .catch(() => {}) をつけます
+    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
+    // () => {}は「何もしない」という空っぽの命令。エラーが起きても無視してという意味になる
 
     updateDisplay(); // 画面を更新します
 }
@@ -133,7 +132,8 @@ function switchMode() {
 startButton.addEventListener("click", function() {
     if (timerld === null) {
         // タイマーが止まっていたらスタートします
-        playAudio("start.mp3"); // 再生開始
+        startSound.currentTime = 0; // 音を最初から再生できるようにリセット
+        startSound.play().catch(() => {}); // 再生開始
         
         // 1秒ごとに動き出すタイマーです
         timerld = setInterval(function() {
@@ -159,6 +159,10 @@ startButton.addEventListener("click", function() {
         // タイマーが動いている時に押したら止める処理です
         clearInterval(timerld); // タイマーを解除
         timerld = null; // 止まっている状態に設定
+        startSound.pause(); // 音を一時停止
+        startSound.currentTime = 0; // 音を最初に戻す
+        breakSound.pause(); // 休憩の音も停止
+        breakSound.currentTime = 0;
         startButton.textContent = "開始"; // ボタンを「開始」に戻す
     }
 });
@@ -170,6 +174,10 @@ resetButton.addEventListener("click", function() {
     isWorkMode = true; // 作業モードに戻す
     time = 25 * 60; // 時間を25分に戻す
     totalSeconds = 0; // 合計時間をゼロに
+    startSound.pause(); // 音を停止
+    startSound.currentTime = 0;
+    breakSound.pause();
+    breakSound.currentTime = 0;
     updateDisplay(); // 画面をリセット
     startButton.textContent = "開始";
 });
@@ -177,7 +185,7 @@ resetButton.addEventListener("click", function() {
 // 終了ボタン（結果確認）が押された時の処理です
 endButton.addEventListener("click", function() {
     // １、音を鳴らす
-    playAudio("finish.mp3");
+    finishSound.play().catch(() => {});
 
     // ２、処理計算
     let hours = Math.floor(totalSeconds / 3600); // 合計時間を計算
