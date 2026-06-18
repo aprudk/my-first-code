@@ -102,61 +102,106 @@ function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
     
-    if (isWorkMode) { startSound.play(); } else { breakSound.play(); }
+    // 音を鳴らします。失敗してもプログラムが止まらないよう .catch(() => {}) をつけます
+    if (!isWorkMode) { 
+        breakSound.currentTime = 0;
+        breakSound.play().catch(() => {}); 
+    }
+    // () => {}は「何もしない」という空っぽの命令。エラーが起きても無視してという意味になる
 
-    updateDisplay();
+    updateDisplay(); // 画面を更新します
 }
 
+// 画面の要素を操作するために名前をつけておきます
+// ドキュメント=Webページ
+// ゲット・エレメント・バイ・アイディー=指定した要素（ID)を拾い上げて操作できる状態にする
 const timerElement = document.getElementById("timer");
 const statusDisplay = document.getElementById("statusDisplay");
 const startButton = document.getElementById("startButton");
 const resetButton = document.getElementById("resetButton");
 const endButton = document.getElementById("endButton");
+    
+// タイマーの数字や表示を最新にするための関数です
+// function=料理レシピのようなもの、命令のパッケージ
+// undateDisplay=見えない計算を、見えるように画面に反映する
+function updateDisplay() {
+    let minutes = Math.floor(time / 60); // 秒数から「分」を計算します
+    let seconds = time % 60; // 秒数から「余りの秒」を計算します
+    // 「05:00」のように2桁で表示するように文字を整えます
+    timerElement.textContent = String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    // textContent=String（後述）を書くための掲示板のようなもの
+    // String=文字列（人間が読む文字）
 
+    let hours = Math.floor(totalSeconds / 3600); // 合計秒から「時間」を計算
+    let remainingMinutes = Math.floor((totalSeconds % 3600) / 60); // 合計秒から「残り分」を計算
+    const displayElement = document.getElementById("totalTimeDisplay");
+
+    // 合計作業時間の表示文言を作ります
+    if (hours > 0) {
+        displayElement.textContent = "本日の作業時間：" + hours + "時間" + remainingMinutes + "分";
+    } else {
+        displayElement.textContent = "本日の作業時間：" + remainingMinutes + "分";
+    }
+
+    // 今が作業中か休憩中かを表示します
+    statusDisplay.textContent = isWorkMode ? "作業中" : "休憩中";
+}
+
+// 開始ボタンが押された時の処理です
 startButton.addEventListener("click", function() {
 
     startSound.play();
     
     if (timerld === null) {
+        // タイマーが止まっていたらスタートします
         timerld = setInterval(function() {
-            time--;
+            time--; // 1秒減らします
             
             if (isWorkMode) {
-                totalSeconds++;
+                totalSeconds++; // 作業中なら合計時間を増やします
             }
             
-            updateDisplay();
+            updateDisplay(); // 画面を書き換えます
 
+            // 時間が0になったらタイマーを止めて切り替えます
             if (time <= 0) {
                 clearInterval(timerld);
                 timerld = null;
-                switchMode();
-                startButton.click();
+                switchMode(); // モード切り替え
+                startButton.click(); // 自動的に次のタイマーを回します
             }
         }, 1000);
 
-        startButton.textContent = "停止";
+        startButton.textContent = "停止"; // ボタンの名前を「停止」にします
     } else {
-        clearInterval(timerld);
-        timerld = null;
-        startButton.textContent = "開始";
+        // タイマーが動いている時に押したら止める処理です
+        clearInterval(timerld); // タイマーを解除
+        timerld = null; // 止まっている状態に設定
+        startButton.textContent = "開始"; // ボタンを「開始」に戻します
     }
 });
 
+// リセットボタンが押された時の処理です
 resetButton.addEventListener("click", function() {
-    clearInterval(timerld);
+    clearInterval(timerld); // タイマーを停止
     timerld = null;
-    isWorkMode = true;
-    time = 25 * 60;
-    totalSeconds = 0;
-    updateDisplay();
+    isWorkMode = true; // 作業モードに戻す
+    time = 25 * 60; // 時間を25分に戻す
+    totalSeconds = 0; // 合計時間をゼロに
+    updateDisplay(); // 画面をリセット
     startButton.textContent = "開始";
 });
 
+// 終了ボタン（結果確認）が押された時の処理です
 endButton.addEventListener("click", function() {
-    let hours = Math.floor(totalSeconds / 3600);
-    let minutes = Math.floor((totalSeconds % 3600) / 60);
-    alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
+    // １、音を鳴らす
+    let hours = Math.floor(totalSeconds / 3600); // 合計時間を計算
+    let minutes = Math.floor((totalSeconds % 3600) / 60); // 合計分を計算
+
+    // ３、ポップアップ表示（少しだけ時間をずらして実行する）
+    setTimeout(function() {
+        alert("お疲れ様でした！本日の合計作業時間： " + hours + "時間" + minutes + "分 ");
+    }, 100); // 0.1秒待つことで、ブラウザが音声再生を先に処理できるようにします
 });
 </script>
 
