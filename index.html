@@ -31,11 +31,15 @@ let time = 5;
 let totalSeconds = 0;
 let timerld = null;
 let isWorkMode = true;
-let isAudioUnlocked = false;
+let isAudioUnlocked = false; // 権限取得フラグ
 
+// 音声用オブジェクト
 const startSound = new Audio("start.mp3");
 const breakSound = new Audio("break.mp3");
 const finishSound = new Audio("finish.mp3");
+
+// 権限取得用（別オブジェクトにすることで、本番用のcurrentTimeに影響を与えない）
+const unlockSound = new Audio("start.mp3");
 
 const timerElement = document.getElementById("timer");
 const statusDisplay = document.getElementById("statusDisplay");
@@ -57,18 +61,21 @@ function updateDisplay() {
 function switchMode() {
     isWorkMode = !isWorkMode;
     time = isWorkMode ? 25 * 60 : 5 * 60;
-    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
+    // ここで再生される時は必ずcurrentTimeが0の状態から始まる
+    if (isWorkMode) { startSound.currentTime = 0; startSound.play().catch(() => {}); } 
+    else { breakSound.currentTime = 0; breakSound.play().catch(() => {}); }
     updateDisplay();
 }
 
 startButton.addEventListener("click", function() {
     if (timerld === null) {
-        // 権限取得：音を鳴らさずにシステムに許可を教える
+        // 【修正点】開始時に権限取得用のオブジェクトのみを無音で鳴らす
         if (!isAudioUnlocked) {
-            [startSound, breakSound, finishSound].forEach(s => {
-                s.volume = 0;
-                s.play().then(() => { s.pause(); s.currentTime = 0.5; s.volume = 1; }).catch(() => {});
-            });
+            unlockSound.volume = 0;
+            unlockSound.play().then(() => {
+                unlockSound.pause();
+                unlockSound.currentTime = 0;
+            }).catch(() => {});
             isAudioUnlocked = true;
         }
 
@@ -80,7 +87,10 @@ startButton.addEventListener("click", function() {
             if (isWorkMode) totalSeconds++;
             updateDisplay();
             if (time <= 0) {
+                clearInterval(timerld);
+                timerld = null;
                 switchMode();
+                if (time <= 0) startButton.click(); // タイマーの再開
             }
         }, 1000);
         startButton.textContent = "停止";
@@ -101,11 +111,14 @@ resetButton.addEventListener("click", function() {
     isWorkMode = true;
     time = 25 * 60;
     totalSeconds = 0;
+    startSound.pause(); startSound.currentTime = 0;
+    breakSound.pause(); breakSound.currentTime = 0;
     updateDisplay();
     startButton.textContent = "開始";
 });
 
 endButton.addEventListener("click", function() {
+    finishSound.currentTime = 0;
     finishSound.play().catch(() => {});
     let hours = Math.floor(totalSeconds / 3600);
     let minutes = Math.floor((totalSeconds % 3600) / 60);
