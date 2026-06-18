@@ -72,7 +72,7 @@
 <script>
 // --- JavaScriptの処理開始 ---
 
-let time = 5; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
+let time = 25 * 60; // タイマーの残り時間を秒数で持ちます（25分＝1500秒）
 let totalSeconds = 0; // 今日どれだけ作業したかの合計秒数です
 let timerld = null; // タイマーが動いているか記録する場所です（nullは止まっている状態）
 let isWorkMode = true; // 今が作業中(true)か休憩中(false)かの切り替えスイッチです
@@ -122,13 +122,7 @@ function switchMode() {
     time = isWorkMode ? 25 * 60 : 5 * 60; // モードに合わせて時間をセットします
     
     // 音を鳴らします。失敗してもプログラムが止まらないよう .catch(() => {}) をつけます
-    if (isWorkMode) {
-        startSound.currentTime = 0;
-        startSound.play().catch(() => {});
-    } else {
-        breakSound.currentTime = 0;
-        breakSound.play().catch(() => {});
-    }
+    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
     // () => {}は「何もしない」という空っぽの命令。エラーが起きても無視してという意味になる
 
     updateDisplay(); // 画面を更新します
