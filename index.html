@@ -118,14 +118,18 @@ function updateDisplay() {
 
 // 作業と休憩を入れ替える関数です
 function switchMode() {
-    isWorkMode = !isWorkMode; // スイッチを反転させます
-    time = isWorkMode ? 25 * 60 : 5 * 60; // モードに合わせて時間をセットします
-    
-    // 音を鳴らします。失敗してもプログラムが止まらないよう .catch(() => {}) をつけます
-    if (isWorkMode) { startSound.play().catch(() => {}); } else { breakSound.play().catch(() => {}); }
-    // () => {}は「何もしない」という空っぽの命令。エラーが起きても無視してという意味になる
+    isWorkMode = !isWorkMode;
+    time = isWorkMode ? 25 * 60 : 5 * 60;
 
-    updateDisplay(); // 画面を更新します
+    // ここで今、どちらが鳴ろうとしているかを確認（コンソールログ）
+    if (isWorkMode) {
+        console.log("作業モードへ切り替え：startSoundを再生");
+        startSound.play().catch(() => {});
+    } else {
+        console.log("休憩モードへ切り替え：breakSoundを再生");
+        breakSound.play().catch(() => {});
+    }
+    updateDisplay();
 }
 
 // 開始ボタンが押された時の処理です
